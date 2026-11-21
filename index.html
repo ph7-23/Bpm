@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d0d11">
+<title>Jogo de masturbação</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;800&display=swap');
 
@@ -148,8 +155,26 @@ textarea:focus{border-color:#ff2f6e}
 .btns{display:flex;gap:8px;justify-content:center}
 .btns button{border-radius:22px;padding:11px 22px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;cursor:pointer;font-family:inherit;border:1px solid #ffffff2e;background:#ffffff14;color:#fff}
 .btns button.pri{background:#ff2f6e;border-color:#ff2f6e}
-@media (max-width:560px){.panels{grid-template-columns:1fr}#game{height:440px}.circle{width:220px;height:220px;margin:-110px 0 0 -110px}.wordBox{width:140px;height:140px}.agg{grid-template-columns:repeat(2,1fr)}}
+
+@media (max-width:560px){
+  .wrap{padding:18px 12px 40px}
+  h1{font-size:26px}
+  .sub{font-size:12px}
+  .panels{grid-template-columns:1fr}
+  #game{height:440px}
+  .circle{width:220px;height:220px;margin:-110px 0 0 -110px}
+  .wordBox{width:140px;height:140px}
+  .agg{grid-template-columns:repeat(2,1fr)}
+  .mediaGrid{grid-template-columns:repeat(4,1fr)}
+  .hud{padding:10px 11px}
+  .hudrow{gap:7px;font-size:10px}
+  .hudrow button{padding:6px 11px}
+  .sess{flex-wrap:wrap;gap:6px}
+  .sess .when{min-width:0}
+}
 </style>
+</head>
+<body>
 
 <div class="wrap">
 
@@ -937,3 +962,6 @@ renderMedia();
 renderHist();
 })();
 </script>
+
+</body>
+</html>
