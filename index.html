@@ -172,6 +172,20 @@ textarea:focus{border-color:#ff2f6e}
   .sess{flex-wrap:wrap;gap:6px}
   .sess .when{min-width:0}
 }
+
+/* ===== TELA CHEIA DURANTE O JOGO ===== */
+body.playing{overflow:hidden}
+body.playing .wrap{max-width:900px;padding:0 12px}
+body.playing #game{height:100vh;height:100dvh;border:0;border-radius:0}
+body.playing .hud{padding-top:calc(12px + env(safe-area-inset-top))}
+body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20px + env(safe-area-inset-top))}
+
+@media (max-width:560px){
+  body.playing .wrap{max-width:none;padding:0}
+  body.playing .endWord{font-size:54px}
+  body.playing .stats{max-width:280px}
+  body.playing .btns button{padding:11px 16px}
+}
 </style>
 </head>
 <body>
@@ -661,6 +675,7 @@ function startGame(){
 
   $('#setup').classList.add('hidden');
   $('#game').classList.remove('hidden');
+  document.body.classList.add('playing');
   $('#game').classList.remove('paused');
   $('#endOverlay').classList.add('hidden');
   $('#fill').style.width = '0%';
@@ -722,6 +737,7 @@ function quitGame(){
   G = null;
 
   clearTimeout(banner._t);
+  document.body.classList.remove('playing');
   $('#game').classList.add('hidden');
   $('#game').classList.remove('paused');
   $('#endOverlay').classList.add('hidden');
