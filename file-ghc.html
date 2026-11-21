@@ -1,0 +1,136 @@
+<div class="wrap">
+
+  <section id="setup">
+    <div class="kicker">metrônomo</div>
+    <h1>Jogo de masturbação</h1>
+    <p class="sub">Configure a sessão: o fundo, o ritmo, as palavras e os eventos. A barra no topo é o seu tempo — quando ela encher, acabou.</p>
+
+    <div class="tabs">
+      <button class="tab on" data-tab="cfg">Configurar</button>
+      <button class="tab" data-tab="st">Estatísticas</button>
+    </div>
+
+    <div id="tabCfg">
+      <div class="panels">
+        <div class="panel">
+          <h2>1. Mídia</h2>
+          <p class="hint">Alternam sozinhas a cada 8 s no fundo. <b>Clique numa miniatura para marcar o ponto focal</b> — o enquadramento respeita esse ponto.</p>
+          <label class="drop" for="fileInput">
+            Clique para escolher arquivos<br><small>imagens e vídeos</small>
+            <input type="file" id="fileInput" accept="image/*,video/*" multiple="" hidden="">
+          </label>
+          <div class="urlrow">
+            <input id="urlInput" placeholder="ou cole uma URL de imagem/vídeo" autocomplete="off">
+            <button id="addUrl" title="Adicionar">+</button>
+          </div>
+          <div class="mediaGrid" id="mediaGrid"></div>
+          <div class="count" id="mediaCount">nenhuma mídia</div>
+        </div>
+
+        <div class="panel">
+          <h2>2. Ritmo</h2>
+          <p class="hint">O ritmo pode ficar fixo ou subir sozinho do começo ao fim.</p>
+          <div class="seg" id="modeSeg">
+            <button class="on" data-mode="fixo">Fixo</button>
+            <button data-mode="cres">Crescente</button>
+          </div>
+          <div id="fixoBox">
+            <label class="row">
+              <span class="lab">Batidas por minuto <b id="bpmVal">80</b></span>
+              <input type="range" id="bpm" min="40" max="160" step="2" value="80">
+            </label>
+          </div>
+          <div id="cresBox" class="hidden">
+            <label class="row">
+              <span class="lab">BPM inicial <b id="bpmFromVal">50</b></span>
+              <input type="range" id="bpmFrom" min="30" max="140" step="2" value="50">
+            </label>
+            <label class="row">
+              <span class="lab">BPM final <b id="bpmToVal">130</b></span>
+              <input type="range" id="bpmTo" min="40" max="200" step="2" value="130">
+            </label>
+          </div>
+          <label class="row">
+            <span class="lab">Duração <b id="durVal">5 min</b></span>
+            <input type="range" id="dur" min="1" max="30" step="1" value="5">
+          </label>
+          <label class="row">
+            <span class="lab">Volume do clique <b id="volVal">40%</b></span>
+            <input type="range" id="vol" min="0" max="100" step="5" value="40">
+          </label>
+        </div>
+
+        <div class="panel wide">
+          <h2>3. Palavras dominantes</h2>
+          <p class="hint">Uma por linha. Elas surgem em ordem, uma depois da outra, distribuídas de forma linear pelo tempo inteiro — do começo ao fim. Ordene da mais fraca para a mais forte.</p>
+          <textarea id="words" spellcheck="false"></textarea>
+        </div>
+
+        <div class="panel wide">
+          <h2>4. Eventos aleatórios</h2>
+          <p class="hint">Acontecem raramente, sem aviso, e bagunçam o ritmo.</p>
+          <div class="events">
+            <label class="chk on"><input type="checkbox" id="evDouble" checked=""> Double pace</label>
+            <label class="chk on"><input type="checkbox" id="evHalf" checked=""> Half pace</label>
+            <label class="chk on"><input type="checkbox" id="evStop" checked=""> Parada repentina</label>
+            <label class="chk on"><input type="checkbox" id="evFrantic" checked=""> Troca frenética</label>
+            <label class="chk on"><input type="checkbox" id="evVib" checked=""> Vibração nas batidas</label>
+          </div>
+          <label class="row">
+            <span class="lab">Frequência <b id="freqVal">raro</b></span>
+            <input type="range" id="freq" min="1" max="5" step="1" value="2">
+          </label>
+        </div>
+      </div>
+
+      <button class="start" id="startBtn">Começar</button>
+    </div>
+
+    <div id="tabSt" class="hidden">
+      <div class="agg" id="agg"></div>
+      <div class="sessList" id="sessList"></div>
+      <button class="clearHist" id="clearHist">Limpar histórico</button>
+    </div>
+  </section>
+
+  <section id="game" class="hidden">
+    <div id="bgLayers"></div>
+
+    <div class="hud">
+      <div class="bar"><div id="fill"></div></div>
+      <div class="hudrow">
+        <span id="timeTxt">0:00</span>
+        <span id="bpmTag">80 bpm</span>
+        <span class="sp"></span>
+        <button id="pauseBtn">Pausar</button>
+        <button id="quitBtn">Sair</button>
+      </div>
+    </div>
+
+    <div id="eventEl"></div>
+    <div id="countEl"></div>
+    <div id="pausedLabel">pausado</div>
+
+    <div class="stage" id="stage">
+      <div class="circle" id="circle"></div>
+      <div class="wordBox" id="wordBox"><span id="word"></span></div>
+    </div>
+
+    <div id="endOverlay" class="hidden">
+      <div>
+        <div class="endWord">GOZA</div>
+        <div class="statsSub">fim da sessão</div>
+        <div class="stats">
+          <div class="stat"><b id="stBeats">0</b><span>batidas</span></div>
+          <div class="stat"><b id="stEvents">0</b><span>eventos</span></div>
+          <div class="stat"><b id="stTime">0:00</b><span>tempo real</span></div>
+        </div>
+        <div class="btns">
+          <button class="pri" id="againBtn">De novo</button>
+          <button id="backBtn">Ajustar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
