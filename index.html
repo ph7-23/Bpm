@@ -340,6 +340,7 @@ const FREQLABEL = {1:'muito raro',2:'raro',3:'normal',4:'frequente',5:'constante
 const CYCLE = 8000;
 const FRENZY = 1500;
 const FRENZY_MS = 12000;
+const RUSH_CEIL = 300;   // teto de BPM na reta final
 const POSKEY = 'metroGameWordPos_v1';
 const HISTKEY = 'metroGameSessions_v1';
 const SAVE = 'metroGameCfg_v4';
@@ -693,6 +694,7 @@ function startGame(){
     cfg, running:true, paused:false, finished:false,
     elapsed:0, last:performance.now(), beatAcc:0, beatInterval:60000 / cfg.bpm,
     beatCount:0, mult:1, scale:1, stopped:false, frantic:false, finalRush:false, curBase:cfg.bpm,
+    rushFrom:null,
     countIn:4, nextEventAt:0, eventUntil:0, eventType:null,
     nextMediaAt:0, curMedia:-1, wordIdx:-1, raf:0,
     stats:{beats:0, events:0}
@@ -829,6 +831,8 @@ function clearEvent(){
 /* ---------- reta final ---------- */
 function enterRush(){
   G.finalRush = true;
+  // guarda o BPM real do momento em que a reta final começa (já limitado ao teto)
+  G.rushFrom = Math.min(G.curBase * G.mult, RUSH_CEIL);
   if(G.eventUntil) clearEvent();
   G.nextEventAt = Infinity;
   G.mult = 1; G.stopped = false; G.frantic = false;
@@ -894,8 +898,16 @@ function frame(now){
 
     if(!G.finalRush && G.countIn <= 0 && p >= 0.9) enterRush();
 
-    const rush = G.finalRush ? 1 + 1.7 * clamp((p - 0.9) / 0.1, 0, 1) : 1;
-    const eff = G.curBase * G.mult * rush;
+    // reta final: sobe linearmente do BPM atual até o teto e trava nele
+    let eff;
+    if(G.finalRush){
+      const t = clamp((p - 0.9) / 0.1, 0, 1);
+      const from = G.rushFrom != null ? G.rushFrom : Math.min(G.curBase, RUSH_CEIL);
+      eff = from + (RUSH_CEIL - from) * t;
+      if(eff > RUSH_CEIL) eff = RUSH_CEIL;
+    }else{
+      eff = G.curBase * G.mult;
+    }
     G.beatInterval = 60000 / eff;
     $('#bpmTag').textContent = Math.round(eff) + ' bpm';
 
