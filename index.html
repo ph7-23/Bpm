@@ -222,7 +222,7 @@ body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20p
       <div class="panels">
         <div class="panel">
           <h2>1. Mídia</h2>
-          <p class="hint">Fica salva no aparelho. Imagens trocam a cada 8 s; vídeos até 45 s tocam inteiros, vídeos longos tocam 45 s. <b>Clique numa miniatura para marcar o ponto focal</b>.</p>
+          <p class="hint">Fica salva no aparelho e roda em ordem embaralhada — nada se repete antes de todas aparecerem. <b>Clique numa miniatura para marcar o ponto focal</b>.</p>
           <label class="drop" for="fileInput" id="dropLabel">
             Clique para escolher arquivos<br><small>imagens e vídeos</small>
             <input type="file" id="fileInput" accept="image/*,video/*" multiple hidden>
@@ -266,6 +266,16 @@ body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20p
             <input type="range" id="dur" min="1" max="30" step="1" value="5">
           </label>
           <div class="hint" id="durHint" style="margin-top:6px"></div>
+          <label class="row">
+            <span class="lab">Tempo de slide <b id="slideVal">8 s</b></span>
+            <input type="range" id="slide" min="3" max="30" step="1" value="8">
+          </label>
+          <p class="hint" style="margin-top:2px">Quanto cada imagem fica na tela.</p>
+          <label class="row">
+            <span class="lab">Limite de vídeo longo <b id="capVal">45 s</b></span>
+            <input type="range" id="cap" min="10" max="120" step="5" value="45">
+          </label>
+          <p class="hint" style="margin-top:2px">Vídeos abaixo desse limite tocam inteiros; acima, tocam só até o limite.</p>
           <label class="row">
             <span class="lab">Volume do clique <b id="volVal">40%</b></span>
             <input type="range" id="vol" min="0" max="100" step="5" value="40">
@@ -364,14 +374,12 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8
 const DEFAULT_WORDS = ["devagar","sente","respira","mais fundo","acelera","nao para","mais forte","segura","quase","goza"];
 const FREQ = {1:[30000,52000],2:[20000,36000],3:[13000,25000],4:[9000,17000],5:[6000,12000]};
 const FREQLABEL = {1:'muito raro',2:'raro',3:'normal',4:'frequente',5:'constante'};
-const CYCLE = 8000;
-const LONG_VIDEO = 45000;
 const FRENZY = 1500;
 const FRENZY_MS = 12000;
 const RUSH_CEIL = 300;
 const POSKEY = 'metroGameWordPos_v1';
 const HISTKEY = 'metroGameSessions_v1';
-const SAVE = 'metroGameCfg_v4';
+const SAVE = 'metroGameCfg_v5';
 
 const DB_NAME = 'metroGameMedia';
 const DB_STORE = 'items';
@@ -453,7 +461,6 @@ async function hashBlob(blob){
     const h = await crypto.subtle.digest('SHA-256', buf);
     return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2,'0')).join('');
   }catch(e){
-    // fallback fraco: tamanho + nome + tipo
     return 'fb:' + blob.size + ':' + (blob.name || '') + ':' + blob.type;
   }
 }
@@ -480,7 +487,7 @@ function saveCfg(){
     try{
       localStorage.setItem(SAVE, JSON.stringify({
         mode, bpm:+$('#bpm').value, from:+$('#bpmFrom').value, to:+$('#bpmTo').value,
-        dur:+$('#dur').value, vol:+$('#vol').value,
+        dur:+$('#dur').value, vol:+$('#vol').value, slide:+$('#slide').value, cap:+$('#cap').value,
         freq:+$('#freq').value, words:$('#words').value,
         evD:$('#evDouble').checked, evH:$('#evHalf').checked, evS:$('#evStop').checked,
         evF:$('#evFrantic').checked, evV:$('#evVib').checked
@@ -497,6 +504,8 @@ function loadCfg(){
   if(c.to) $('#bpmTo').value = c.to;
   if(c.dur) $('#dur').value = c.dur;
   if(c.vol != null) $('#vol').value = c.vol;
+  if(c.slide) $('#slide').value = c.slide;
+  if(c.cap) $('#cap').value = c.cap;
   if(c.freq) $('#freq').value = c.freq;
   $('#words').value = c.words || DEFAULT_WORDS.join('\n');
   $('#evDouble').checked  = c.evD !== false;
@@ -522,6 +531,8 @@ function syncLabels(){
   $('#bpmFromVal').textContent = $('#bpmFrom').value;
   $('#bpmToVal').textContent = $('#bpmTo').value;
   $('#durVal').textContent = $('#dur').value + ' min';
+  $('#slideVal').textContent = $('#slide').value + ' s';
+  $('#capVal').textContent = $('#cap').value + ' s';
   $('#volVal').textContent = $('#vol').value + '%';
   $('#freqVal').textContent = FREQLABEL[+$('#freq').value];
   if($('#hudVol').value !== $('#vol').value) $('#hudVol').value = $('#vol').value;
@@ -540,6 +551,7 @@ function setMode(m){
 /* ---------- mídia ---------- */
 function addMediaRecord(m){
   media.push(m);
+  if(G) G.queue = G.queue.filter(id => id !== m.id);
   renderMedia();
 }
 function persistRecord(m){
@@ -603,6 +615,7 @@ function removeMedia(m){
   if(m.own) URL.revokeObjectURL(m.url);
   const i = media.indexOf(m);
   if(i > -1) media.splice(i, 1);
+  if(G) G.queue = G.queue.filter(id => id !== m.id);
   dbDel(m.id);
   renderMedia();
 }
@@ -647,7 +660,7 @@ function buildThumb(m){
   tag.className = 'tag';
   if(m.type === 'video'){
     tag.textContent = m.dur ? Math.round(m.dur) + 's' : 'VID';
-    if(m.dur && m.dur * 1000 >= LONG_VIDEO) tag.classList.add('long');
+    if(m.dur && m.dur >= +$('#cap').value) tag.classList.add('long');
   }else{
     tag.textContent = 'IMG';
   }
@@ -703,6 +716,7 @@ $('#clearMedia').onclick = async () => {
   if(!confirm('Remover todas as ' + media.length + ' mídias?')) return;
   media.forEach(m => { if(m.own) URL.revokeObjectURL(m.url); });
   media = [];
+  if(G){ G.queue = []; G.lastId = null; G.curMedia = -1; }
   await dbClear();
   renderMedia();
 };
@@ -870,6 +884,8 @@ function startGame(){
     bpm: rampOn ? from : +$('#bpm').value,
     duration: +$('#dur').value * 60000,
     vol: +$('#vol').value,
+    slide: +$('#slide').value * 1000,
+    cap: +$('#cap').value * 1000,
     freq: +$('#freq').value,
     vib: $('#evVib').checked,
     words: words.length ? words : DEFAULT_WORDS,
@@ -907,12 +923,13 @@ function startGame(){
     beatCount:0, mult:1, scale:1, stopped:false, frantic:false, finalRush:false, curBase:cfg.bpm,
     rushFrom:null, countIn:5, nextEventAt:0, eventUntil:0, eventType:null,
     nextMediaAt:Infinity, curMedia:-1, curLayer:null, wordIdx:-1, raf:0,
+    queue:[], lastId:null,
     stats:{beats:0, events:0}
   };
 
   scheduleEvent(6000);
   if(media.length){
-    showMedia(Math.floor(Math.random() * media.length));
+    showMedia(pickNext());
   }else{
     G.nextMediaAt = Infinity;
   }
@@ -960,21 +977,45 @@ function quitGame(skipConfirm){
   $('#setup').classList.remove('hidden');
 }
 
+/* ---------- rotação sem repetição ---------- */
+function pickNext(){
+  if(media.length === 0) return -1;
+  if(media.length === 1) return 0;
+
+  if(G.queue.length === 0){
+    G.queue = media.map(m => m.id);
+    for(let i = G.queue.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [G.queue[i], G.queue[j]] = [G.queue[j], G.queue[i]];
+    }
+    // não repete a última imediatamente na virada do ciclo
+    if(G.queue[0] === G.lastId && G.queue.length > 1){
+      const k = 1 + Math.floor(Math.random() * (G.queue.length - 1));
+      [G.queue[0], G.queue[k]] = [G.queue[k], G.queue[0]];
+    }
+  }
+
+  const id = G.queue.shift();
+  G.lastId = id;
+  const idx = media.findIndex(m => m.id === id);
+  if(idx < 0) return pickNext();
+  return idx;
+}
+
 /* ---------- mídia de fundo ---------- */
 function nextDelay(m){
   if(media.length <= 1) return Infinity;
   if(G.frantic) return FRENZY;
   if(G.finalRush) return 4000;
   if(m.type === 'video'){
-    if(m.dur && m.dur * 1000 < LONG_VIDEO) return m.dur * 1000 + 2000;
-    return LONG_VIDEO;
+    if(m.dur && m.dur * 1000 < G.cfg.cap) return m.dur * 1000 + 2000;
+    return G.cfg.cap;
   }
-  return CYCLE;
+  return G.cfg.slide;
 }
 
 function showMedia(i){
-  if(!G || media.length === 0) return;
-  if(media.length > 1 && i === G.curMedia) i = (i + 1 + Math.floor(Math.random() * (media.length - 1))) % media.length;
+  if(!G || media.length === 0 || i < 0) return;
   G.curMedia = i;
   const m = media[i];
 
@@ -991,7 +1032,7 @@ function showMedia(i){
     v.loop = media.length <= 1;
     layer.appendChild(v);
     if(!G.paused) v.play().catch(() => {});
-    // vídeo curto: quando termina, avança na hora
+    // vídeo abaixo do limite: termina e já passa para o próximo
     v.addEventListener('ended', () => {
       if(G && G.curLayer === layer) G.nextMediaAt = G.elapsed;
     });
@@ -1047,7 +1088,7 @@ function fireEvent(){
     c.classList.add('stp'); banner('parou', 2200); buzz(120);
   }else{
     G.frantic = true; G.eventUntil = G.elapsed + FRENZY_MS;
-    G.nextMediaAt = G.elapsed;      // força troca imediata
+    G.nextMediaAt = G.elapsed;
     c.classList.add('frc'); banner('troca frenética', 2400); buzz([30,60,30]);
   }
 }
@@ -1155,7 +1196,7 @@ function frame(now){
     }
 
     if(media.length > 1 && G.elapsed >= G.nextMediaAt){
-      showMedia(Math.floor(Math.random() * media.length));
+      showMedia(pickNext());
     }
 
     if(G.countIn <= 0) updateWord();
@@ -1222,7 +1263,8 @@ window.addEventListener('pagehide', () => {
 });
 
 document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
-['#bpm','#bpmFrom','#bpmTo','#dur','#vol','#freq'].forEach(s => $(s).addEventListener('input', () => { syncLabels(); saveCfg(); }));
+['#bpm','#bpmFrom','#bpmTo','#dur','#vol','#freq','#slide','#cap'].forEach(s => $(s).addEventListener('input', () => { syncLabels(); saveCfg(); }));
+$('#cap').addEventListener('change', renderMedia);
 ['#words','#evDouble','#evHalf','#evStop','#evFrantic','#evVib'].forEach(s => $(s).addEventListener('change', () => { syncLabels(); saveCfg(); }));
 document.querySelectorAll('.chk').forEach(c => c.addEventListener('click', () => setTimeout(syncLabels, 0)));
 
