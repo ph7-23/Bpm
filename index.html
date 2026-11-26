@@ -44,6 +44,7 @@ h1{font-size:31px;line-height:1.02;margin:8px 0 8px;letter-spacing:-.03em;font-w
 
 .drop{display:block;text-align:center;border:1px dashed var(--host-border-hover);border-radius:9px;padding:16px 8px;cursor:pointer;font-size:12px;color:var(--host-fg-muted);transition:.15s;line-height:1.5;background:#ffffff05}
 .drop:hover{border-color:#ff2f6e;color:var(--host-fg)}
+.drop.busy{opacity:.55;pointer-events:none}
 .urlrow{display:flex;gap:6px;margin-top:8px}
 .urlrow input{flex:1;min-width:0;background:var(--host-input);border:1px solid var(--host-border);border-radius:8px;padding:8px 10px;color:var(--host-fg);font-size:11.5px;font-family:inherit;outline:none}
 .urlrow input::placeholder{color:#6d6d78}
@@ -58,7 +59,11 @@ h1{font-size:31px;line-height:1.02;margin:8px 0 8px;letter-spacing:-.03em;font-w
 .thumb .dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:#ff2f6e;border:2px solid #fff;box-shadow:0 0 0 1px #0008}
 .thumb .del{position:absolute;top:2px;right:2px;width:17px;height:17px;border-radius:50%;background:#000c;color:#fff;border:0;font-size:11px;line-height:17px;text-align:center;cursor:pointer;padding:0;z-index:3}
 .thumb .tag{position:absolute;bottom:2px;left:3px;font-size:8px;letter-spacing:.08em;background:#000b;color:#fff;padding:1px 4px;border-radius:3px;z-index:2}
-.count{font-size:10.5px;color:var(--host-fg-muted);margin-top:8px}
+.thumb .tag.long{color:#ffd166}
+.mediaFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.count{font-size:10.5px;color:var(--host-fg-muted)}
+.clearMedia{background:none;border:1px solid var(--host-border);color:var(--host-fg-muted);border-radius:20px;padding:4px 11px;font-family:inherit;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;cursor:pointer}
+.clearMedia:hover{color:var(--host-fg);border-color:var(--host-border-hover)}
 
 .row{display:block;margin-top:12px}
 .row .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--host-fg-muted);margin-bottom:6px}
@@ -98,6 +103,10 @@ textarea:focus{border-color:#ff2f6e}
 .clearHist{margin-top:12px;background:none;border:1px solid var(--host-border);color:var(--host-fg-muted);border-radius:20px;padding:8px 16px;font-family:inherit;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer}
 .clearHist:hover{color:var(--host-fg);border-color:var(--host-border-hover)}
 
+/* ===== TOAST ===== */
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,14px);z-index:60;background:#1c1c24ee;border:1px solid #ff2f6e66;color:#fff;padding:10px 16px;border-radius:22px;font-size:11.5px;letter-spacing:.06em;opacity:0;pointer-events:none;transition:.22s;max-width:88vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
 /* ===== GAME ===== */
 #game{position:relative;width:100%;height:520px;border-radius:14px;overflow:hidden;background:#050508;user-select:none;touch-action:manipulation;border:1px solid var(--host-border)}
 #bgLayers{position:absolute;inset:0;transition:filter .4s ease,transform .4s ease}
@@ -119,6 +128,11 @@ textarea:focus{border-color:#ff2f6e}
 .hudrow button{background:#ffffff14;border:1px solid #ffffff2e;color:#fff;border-radius:20px;padding:6px 14px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;font-family:inherit;font-weight:700;backdrop-filter:blur(6px)}
 .hudrow button:hover{background:#ffffff28}
 #bpmTag{font-weight:700;color:#ff8fb4;min-width:66px}
+.volWrap{display:flex;align-items:center;gap:6px;width:88px;flex:0 0 auto}
+.volWrap span{font-size:9.5px;letter-spacing:.1em;color:#ffffff8f}
+.volWrap input[type=range]{height:3px;background:#ffffff33}
+.volWrap input[type=range]::-webkit-slider-thumb{width:12px;height:12px;border-color:#00000080;background:#fff}
+.volWrap input[type=range]::-moz-range-thumb{background:#fff}
 
 #eventEl{position:absolute;top:74px;left:50%;transform:translateX(-50%) translateY(-6px);z-index:7;font-size:11px;letter-spacing:.3em;text-transform:uppercase;font-weight:800;color:#fff;background:#000000b0;border:1px solid #ffffff30;padding:6px 14px;border-radius:20px;opacity:0;transition:.3s;white-space:nowrap}
 #eventEl.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -169,6 +183,7 @@ textarea:focus{border-color:#ff2f6e}
   .hud{padding:10px 11px}
   .hudrow{gap:7px;font-size:10px}
   .hudrow button{padding:6px 11px}
+  .volWrap{width:64px}
   .sess{flex-wrap:wrap;gap:6px}
   .sess .when{min-width:0}
 }
@@ -185,6 +200,7 @@ body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20p
   body.playing .endWord{font-size:54px}
   body.playing .stats{max-width:280px}
   body.playing .btns button{padding:11px 16px}
+  body.playing .volWrap{width:54px}
 }
 </style>
 </head>
@@ -206,8 +222,8 @@ body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20p
       <div class="panels">
         <div class="panel">
           <h2>1. Mídia</h2>
-          <p class="hint">Alternam sozinhas a cada 8 s no fundo. <b>Clique numa miniatura para marcar o ponto focal</b> — o enquadramento respeita esse ponto.</p>
-          <label class="drop" for="fileInput">
+          <p class="hint">Fica salva no aparelho. Imagens trocam a cada 8 s; vídeos até 45 s tocam inteiros, vídeos longos tocam 45 s. <b>Clique numa miniatura para marcar o ponto focal</b>.</p>
+          <label class="drop" for="fileInput" id="dropLabel">
             Clique para escolher arquivos<br><small>imagens e vídeos</small>
             <input type="file" id="fileInput" accept="image/*,video/*" multiple hidden>
           </label>
@@ -216,7 +232,10 @@ body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20p
             <button id="addUrl" title="Adicionar">+</button>
           </div>
           <div class="mediaGrid" id="mediaGrid"></div>
-          <div class="count" id="mediaCount">nenhuma mídia</div>
+          <div class="mediaFoot">
+            <div class="count" id="mediaCount">nenhuma mídia</div>
+            <button class="clearMedia" id="clearMedia">limpar</button>
+          </div>
         </div>
 
         <div class="panel">
@@ -246,6 +265,7 @@ body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20p
             <span class="lab">Duração <b id="durVal">5 min</b></span>
             <input type="range" id="dur" min="1" max="30" step="1" value="5">
           </label>
+          <div class="hint" id="durHint" style="margin-top:6px"></div>
           <label class="row">
             <span class="lab">Volume do clique <b id="volVal">40%</b></span>
             <input type="range" id="vol" min="0" max="100" step="5" value="40">
@@ -294,6 +314,10 @@ body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20p
         <span id="timeTxt">0:00</span>
         <span id="bpmTag">80 bpm</span>
         <span class="sp"></span>
+        <span class="volWrap">
+          <span>vol</span>
+          <input type="range" id="hudVol" min="0" max="100" step="5" value="40" aria-label="Volume">
+        </span>
         <button id="pauseBtn">Pausar</button>
         <button id="quitBtn">Sair</button>
       </div>
@@ -326,6 +350,8 @@ body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20p
   </section>
 </div>
 
+<div id="toast"></div>
+
 <script>
 (function(){
 'use strict';
@@ -333,17 +359,23 @@ body.playing #endOverlay{overflow:auto;align-content:center;padding-top:calc(20p
 const $ = s => document.querySelector(s);
 const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
 const fmt = ms => { const s = Math.max(0, Math.floor(ms/1000)); return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 
 const DEFAULT_WORDS = ["devagar","sente","respira","mais fundo","acelera","nao para","mais forte","segura","quase","goza"];
 const FREQ = {1:[30000,52000],2:[20000,36000],3:[13000,25000],4:[9000,17000],5:[6000,12000]};
 const FREQLABEL = {1:'muito raro',2:'raro',3:'normal',4:'frequente',5:'constante'};
 const CYCLE = 8000;
+const LONG_VIDEO = 45000;
 const FRENZY = 1500;
 const FRENZY_MS = 12000;
-const RUSH_CEIL = 300;   // teto de BPM na reta final
+const RUSH_CEIL = 300;
 const POSKEY = 'metroGameWordPos_v1';
 const HISTKEY = 'metroGameSessions_v1';
 const SAVE = 'metroGameCfg_v4';
+
+const DB_NAME = 'metroGameMedia';
+const DB_STORE = 'items';
+const DB_VER = 1;
 
 let media = [];
 let G = null;
@@ -351,6 +383,95 @@ let actx = null;
 let wordPos = {x:50, y:80};
 let mode = 'fixo';
 let saveT = 0;
+let db = null;
+
+/* ---------- toast ---------- */
+let toastT = 0;
+function toast(txt){
+  const el = $('#toast');
+  el.textContent = txt;
+  el.classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('on'), 2200);
+}
+
+/* ---------- IndexedDB ---------- */
+function openDB(){
+  return new Promise((res, rej) => {
+    let r;
+    try{ r = indexedDB.open(DB_NAME, DB_VER); }catch(e){ return rej(e); }
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      if(!d.objectStoreNames.contains(DB_STORE)){
+        const s = d.createObjectStore(DB_STORE, {keyPath:'id'});
+        s.createIndex('hash', 'hash', {unique:false});
+      }
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+function tx(mode2){
+  return db.transaction(DB_STORE, mode2).objectStore(DB_STORE);
+}
+function dbPut(rec){
+  return new Promise((res, rej) => {
+    if(!db) return rej(new Error('sem db'));
+    const req = tx('readwrite').put(rec);
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+function dbDel(id){
+  return new Promise(res => {
+    if(!db) return res();
+    const req = tx('readwrite').delete(id);
+    req.onsuccess = () => res();
+    req.onerror = () => res();
+  });
+}
+function dbClear(){
+  return new Promise(res => {
+    if(!db) return res();
+    const req = tx('readwrite').clear();
+    req.onsuccess = () => res();
+    req.onerror = () => res();
+  });
+}
+function dbAll(){
+  return new Promise((res, rej) => {
+    if(!db) return res([]);
+    const req = tx('readonly').getAll();
+    req.onsuccess = () => res(req.result || []);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+async function hashBlob(blob){
+  try{
+    const buf = await blob.arrayBuffer();
+    const h = await crypto.subtle.digest('SHA-256', buf);
+    return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2,'0')).join('');
+  }catch(e){
+    // fallback fraco: tamanho + nome + tipo
+    return 'fb:' + blob.size + ':' + (blob.name || '') + ':' + blob.type;
+  }
+}
+function normUrl(u){ return u.trim(); }
+
+async function probeDuration(src){
+  return new Promise(res => {
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.muted = true;
+    let done = false;
+    const fin = d => { if(done) return; done = true; res(d); };
+    v.onloadedmetadata = () => fin(isFinite(v.duration) && v.duration > 0 ? v.duration : 0);
+    v.onerror = () => fin(0);
+    setTimeout(() => fin(0), 5000);
+    v.src = src;
+  });
+}
 
 /* ---------- config persistida ---------- */
 function saveCfg(){
@@ -385,6 +506,17 @@ function loadCfg(){
   $('#evVib').checked     = c.evV !== false;
   if(c.mode === 'cres') setMode('cres');
 }
+function durHint(){
+  const words = $('#words').value.split('\n').map(w => w.trim()).filter(Boolean).length || 1;
+  const need = Math.max(1, Math.ceil(words * 0.5));
+  const cur = +$('#dur').value;
+  const el = $('#durHint');
+  if(cur < need){
+    el.innerHTML = '<b style="color:#ff8fb4">' + words + ' palavras</b> pedem pelo menos ' + need + ' min para não atropelar.';
+  }else{
+    el.textContent = '';
+  }
+}
 function syncLabels(){
   $('#bpmVal').textContent = $('#bpm').value;
   $('#bpmFromVal').textContent = $('#bpmFrom').value;
@@ -392,7 +524,10 @@ function syncLabels(){
   $('#durVal').textContent = $('#dur').value + ' min';
   $('#volVal').textContent = $('#vol').value + '%';
   $('#freqVal').textContent = FREQLABEL[+$('#freq').value];
+  if($('#hudVol').value !== $('#vol').value) $('#hudVol').value = $('#vol').value;
+  if(G) G.cfg.vol = +$('#vol').value;
   document.querySelectorAll('.chk').forEach(c => c.classList.toggle('on', c.querySelector('input').checked));
+  durHint();
 }
 function setMode(m){
   mode = m;
@@ -403,8 +538,72 @@ function setMode(m){
 }
 
 /* ---------- mídia ---------- */
-function addMedia(url, type, own){
-  media.push({url, type, own:!!own, fx:50, fy:50});
+function addMediaRecord(m){
+  media.push(m);
+  renderMedia();
+}
+function persistRecord(m){
+  if(!db) return;
+  const rec = {
+    id: m.id, hash: m.hash, name: m.name, type: m.type,
+    fx: m.fx, fy: m.fy, dur: m.dur,
+    url: m.own ? null : m.url,
+    blob: m.own ? m.blob : null
+  };
+  dbPut(rec).catch(err => {
+    if(err && /quota/i.test(err.name || '')) toast('espaço insuficiente para salvar');
+  });
+}
+function savePos(m){
+  clearTimeout(m._t);
+  m._t = setTimeout(() => persistRecord(m), 400);
+}
+
+async function addFile(file){
+  if(!file) return;
+  const type = file.type.startsWith('video') ? 'video' : 'image';
+  const hash = await hashBlob(file);
+  if(media.some(m => m.hash === hash)){
+    toast('"' + (file.name || 'arquivo') + '" já está na lista');
+    return;
+  }
+  const dur = type === 'video' ? await probeDuration(URL.createObjectURL(file)) : 0;
+  const m = {
+    id: uid(), hash, name: file.name || '', type,
+    blob: file, url: URL.createObjectURL(file), own: true,
+    fx: 50, fy: 50, dur
+  };
+  addMediaRecord(m);
+  persistRecord(m);
+}
+
+async function addUrl(raw){
+  const url = normUrl(raw);
+  if(!url) return;
+  if(!/^https?:\/\//i.test(url) && !/^blob:/i.test(url) && !/^data:/i.test(url)){
+    toast('URL inválida');
+    return;
+  }
+  if(media.some(m => !m.own && m.url === url)){
+    toast('essa URL já está na lista');
+    return;
+  }
+  const type = /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(url) ? 'video' : 'image';
+  const dur = type === 'video' ? await probeDuration(url) : 0;
+  const m = {
+    id: uid(), hash: 'url:' + url, name: url, type,
+    blob: null, url, own: false,
+    fx: 50, fy: 50, dur
+  };
+  addMediaRecord(m);
+  persistRecord(m);
+}
+
+function removeMedia(m){
+  if(m.own) URL.revokeObjectURL(m.url);
+  const i = media.indexOf(m);
+  if(i > -1) media.splice(i, 1);
+  dbDel(m.id);
   renderMedia();
 }
 
@@ -419,8 +618,6 @@ function buildThumb(m){
   el.src = m.url;
   d.appendChild(el);
 
-  // o "frame" cobre exatamente a área onde a imagem é desenhada (object-fit: cover),
-  // então o ponto focal marcado aqui bate com o enquadramento real no jogo
   const frame = document.createElement('span');
   frame.className = 'frame';
   const dot = document.createElement('span');
@@ -448,7 +645,12 @@ function buildThumb(m){
 
   const tag = document.createElement('span');
   tag.className = 'tag';
-  tag.textContent = m.type === 'video' ? 'VID' : 'IMG';
+  if(m.type === 'video'){
+    tag.textContent = m.dur ? Math.round(m.dur) + 's' : 'VID';
+    if(m.dur && m.dur * 1000 >= LONG_VIDEO) tag.classList.add('long');
+  }else{
+    tag.textContent = 'IMG';
+  }
   d.appendChild(tag);
 
   const del = document.createElement('button');
@@ -456,13 +658,7 @@ function buildThumb(m){
   del.type = 'button';
   del.title = 'Remover';
   del.textContent = '×';
-  del.onclick = e => {
-    e.stopPropagation();
-    if(m.own) URL.revokeObjectURL(m.url);
-    const i = media.indexOf(m);
-    if(i > -1) media.splice(i, 1);
-    renderMedia();
-  };
+  del.onclick = e => { e.stopPropagation(); removeMedia(m); };
   d.appendChild(del);
 
   d.onclick = e => {
@@ -472,6 +668,7 @@ function buildThumb(m){
     m.fy = clamp(Math.round(((e.clientY - fr.top) / fr.height) * 100), 0, 100);
     dot.style.left = m.fx + '%';
     dot.style.top = m.fy + '%';
+    savePos(m);
   };
 
   return d;
@@ -482,20 +679,33 @@ function renderMedia(){
   g.innerHTML = '';
   media.forEach(m => g.appendChild(buildThumb(m)));
   const n = media.length;
-  $('#mediaCount').textContent = n ? n + (n === 1 ? ' mídia carregada' : ' mídias carregadas') : 'nenhuma mídia';
+  $('#mediaCount').textContent = n ? n + (n === 1 ? ' mídia salva' : ' mídias salvas') : 'nenhuma mídia';
+  $('#clearMedia').classList.toggle('hidden', !n);
 }
 
-$('#fileInput').addEventListener('change', e => {
-  [...e.target.files].forEach(f => addMedia(URL.createObjectURL(f), f.type.startsWith('video') ? 'video' : 'image', true));
+$('#fileInput').addEventListener('change', async e => {
+  const files = [...e.target.files];
   e.target.value = '';
+  if(!files.length) return;
+  const lab = $('#dropLabel');
+  lab.classList.add('busy');
+  for(const f of files) await addFile(f);
+  lab.classList.remove('busy');
 });
-$('#addUrl').onclick = () => {
-  const v = $('#urlInput').value.trim();
-  if(!v) return;
-  addMedia(v, /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(v) ? 'video' : 'image', false);
+$('#addUrl').onclick = async () => {
+  const v = $('#urlInput').value;
   $('#urlInput').value = '';
+  await addUrl(v);
 };
 $('#urlInput').addEventListener('keydown', e => { if(e.key === 'Enter') $('#addUrl').click(); });
+$('#clearMedia').onclick = async () => {
+  if(!media.length) return;
+  if(!confirm('Remover todas as ' + media.length + ' mídias?')) return;
+  media.forEach(m => { if(m.own) URL.revokeObjectURL(m.url); });
+  media = [];
+  await dbClear();
+  renderMedia();
+};
 
 /* ---------- histórico ---------- */
 function loadHist(){
@@ -574,12 +784,15 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
 });
 
 /* ---------- áudio ---------- */
-function initAudio(){
-  try{ actx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ actx = null; }
+function ensureAudio(){
+  if(!actx){
+    try{ actx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ actx = null; }
+  }
+  if(actx && actx.state === 'suspended') actx.resume().catch(() => {});
 }
 function click(accent){
-  if(!actx) return;
-  const vol = +$('#vol').value / 100;
+  if(!actx || !G) return;
+  const vol = clamp(G.cfg.vol / 100, 0, 1);
   if(vol <= 0) return;
   const t = actx.currentTime;
   const o = actx.createOscillator(), g = actx.createGain();
@@ -645,7 +858,6 @@ function applyWordPos(){
 
 /* ---------- ciclo de vida ---------- */
 function startGame(){
-  // evita loop duplicado ao reiniciar
   if(G){
     cancelAnimationFrame(G.raf);
     G.running = false;
@@ -671,8 +883,7 @@ function startGame(){
   };
 
   saveCfg();
-  initAudio();
-  if(actx && actx.state === 'suspended') actx.resume();
+  ensureAudio();
 
   $('#setup').classList.add('hidden');
   $('#game').classList.remove('hidden');
@@ -694,15 +905,17 @@ function startGame(){
     cfg, running:true, paused:false, finished:false,
     elapsed:0, last:performance.now(), beatAcc:0, beatInterval:60000 / cfg.bpm,
     beatCount:0, mult:1, scale:1, stopped:false, frantic:false, finalRush:false, curBase:cfg.bpm,
-    rushFrom:null,
-    countIn:4, nextEventAt:0, eventUntil:0, eventType:null,
-    nextMediaAt:0, curMedia:-1, wordIdx:-1, raf:0,
+    rushFrom:null, countIn:5, nextEventAt:0, eventUntil:0, eventType:null,
+    nextMediaAt:Infinity, curMedia:-1, curLayer:null, wordIdx:-1, raf:0,
     stats:{beats:0, events:0}
   };
 
   scheduleEvent(6000);
-  if(media.length) showMedia(Math.floor(Math.random() * media.length));
-  G.nextMediaAt = CYCLE;
+  if(media.length){
+    showMedia(Math.floor(Math.random() * media.length));
+  }else{
+    G.nextMediaAt = Infinity;
+  }
   updateWord(true);
   $('#bpmTag').textContent = cfg.bpm + ' bpm';
   G.raf = requestAnimationFrame(frame);
@@ -721,21 +934,18 @@ function endGame(){
   $('#endOverlay').classList.remove('hidden');
   $('#countEl').classList.remove('on');
   buzz(180);
-  if(actx){
-    actx.resume().then(() => {
-      [0,170,340,520].forEach(d => setTimeout(() => { if(actx) click(true); }, d));
-    }).catch(() => {});
-  }
+  ensureAudio();
+  [0,170,340,520].forEach(d => setTimeout(() => { if(actx) click(true); }, d));
 }
 
-function quitGame(){
-  if(G){
-    cancelAnimationFrame(G.raf);
-    G.running = false;
-    // só registra como interrompida se ainda não tinha terminado
-    if(!G.finished && G.elapsed > 3000) recordSession(true);
+function quitGame(skipConfirm){
+  if(!G) return;
+  if(!G.finished && G.elapsed > 1000 && !skipConfirm){
+    if(!confirm('Encerrar a sessão agora? Ela não entra no histórico.')) return;
   }
-  if(actx){ try{ actx.close(); }catch(e){} actx = null; }
+  cancelAnimationFrame(G.raf);
+  G.running = false;
+  if(!G.finished && G.elapsed > 3000) recordSession(true);
   G = null;
 
   clearTimeout(banner._t);
@@ -751,6 +961,17 @@ function quitGame(){
 }
 
 /* ---------- mídia de fundo ---------- */
+function nextDelay(m){
+  if(media.length <= 1) return Infinity;
+  if(G.frantic) return FRENZY;
+  if(G.finalRush) return 4000;
+  if(m.type === 'video'){
+    if(m.dur && m.dur * 1000 < LONG_VIDEO) return m.dur * 1000 + 2000;
+    return LONG_VIDEO;
+  }
+  return CYCLE;
+}
+
 function showMedia(i){
   if(!G || media.length === 0) return;
   if(media.length > 1 && i === G.curMedia) i = (i + 1 + Math.floor(Math.random() * (media.length - 1))) % media.length;
@@ -759,13 +980,21 @@ function showMedia(i){
 
   const layer = document.createElement('div');
   layer.className = 'bgLayer';
+  G.curLayer = layer;
 
   if(m.type === 'video'){
     const v = document.createElement('video');
     v.src = m.url;
-    v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+    v.muted = true;
+    v.playsInline = true;
+    v.autoplay = true;
+    v.loop = media.length <= 1;
     layer.appendChild(v);
     if(!G.paused) v.play().catch(() => {});
+    // vídeo curto: quando termina, avança na hora
+    v.addEventListener('ended', () => {
+      if(G && G.curLayer === layer) G.nextMediaAt = G.elapsed;
+    });
   }else{
     const bd = document.createElement('div');
     bd.className = 'bgBlur';
@@ -783,6 +1012,8 @@ function showMedia(i){
 
   const old = [...$('#bgLayers').children].filter(c => c !== layer);
   setTimeout(() => old.forEach(o => o.remove()), 900);
+
+  G.nextMediaAt = G.elapsed + nextDelay(m);
 }
 
 /* ---------- eventos ---------- */
@@ -816,7 +1047,7 @@ function fireEvent(){
     c.classList.add('stp'); banner('parou', 2200); buzz(120);
   }else{
     G.frantic = true; G.eventUntil = G.elapsed + FRENZY_MS;
-    G.nextMediaAt = G.elapsed + FRENZY;
+    G.nextMediaAt = G.elapsed;      // força troca imediata
     c.classList.add('frc'); banner('troca frenética', 2400); buzz([30,60,30]);
   }
 }
@@ -831,13 +1062,12 @@ function clearEvent(){
 /* ---------- reta final ---------- */
 function enterRush(){
   G.finalRush = true;
-  // guarda o BPM real do momento em que a reta final começa (já limitado ao teto)
   G.rushFrom = Math.min(G.curBase * G.mult, RUSH_CEIL);
   if(G.eventUntil) clearEvent();
   G.nextEventAt = Infinity;
   G.mult = 1; G.stopped = false; G.frantic = false;
   $('#circle').className = 'circle rush';
-  $('#fill').className = 'hot';
+  $('#fill').classList.add('hot');
   banner('acelera', 2400);
   G.wordIdx = -1;
   const w = G.cfg.words;
@@ -898,7 +1128,6 @@ function frame(now){
 
     if(!G.finalRush && G.countIn <= 0 && p >= 0.9) enterRush();
 
-    // reta final: sobe linearmente do BPM atual até o teto e trava nele
     let eff;
     if(G.finalRush){
       const t = clamp((p - 0.9) / 0.1, 0, 1);
@@ -925,10 +1154,8 @@ function frame(now){
       else if(!G.eventUntil && G.elapsed >= G.nextEventAt) fireEvent();
     }
 
-    if(G.elapsed >= G.nextMediaAt){
-      const gap = G.frantic ? FRENZY : (G.finalRush ? 4000 : CYCLE);
-      G.nextMediaAt = G.elapsed + gap;
-      if(media.length) showMedia(Math.floor(Math.random() * media.length));
+    if(media.length > 1 && G.elapsed >= G.nextMediaAt){
+      showMedia(Math.floor(Math.random() * media.length));
     }
 
     if(G.countIn <= 0) updateWord();
@@ -944,7 +1171,7 @@ function frame(now){
 
   const p2 = clamp(G.elapsed / G.cfg.duration, 0, 1);
   $('#fill').style.width = (p2 * 100).toFixed(2) + '%';
-  if(!G.finalRush) $('#fill').className = p2 >= 0.65 ? 'mid' : '';
+  $('#fill').classList.toggle('mid', !G.finalRush && p2 >= 0.65);
   $('#timeTxt').textContent = fmt(G.elapsed) + ' / ' + fmt(G.cfg.duration);
 
   if(live && G.elapsed >= G.cfg.duration){ endGame(); return; }
@@ -958,25 +1185,40 @@ function togglePause(){
   $('#pauseBtn').textContent = G.paused ? 'Retomar' : 'Pausar';
   $('#game').classList.toggle('paused', G.paused);
   $('#bgLayers').querySelectorAll('video').forEach(v => G.paused ? v.pause() : v.play().catch(() => {}));
-  if(actx){ if(G.paused) actx.suspend(); else actx.resume(); }
+  if(actx){ if(G.paused) actx.suspend().catch(()=>{}); else actx.resume().catch(()=>{}); }
   buzz(G.paused ? 40 : 20);
 }
 
 $('#pauseBtn').onclick = togglePause;
-$('#quitBtn').onclick = quitGame;
+$('#quitBtn').onclick = () => quitGame();
 $('#startBtn').onclick = startGame;
 $('#againBtn').onclick = () => { $('#endOverlay').classList.add('hidden'); startGame(); };
-$('#backBtn').onclick = quitGame;
+$('#backBtn').onclick = () => quitGame(true);
+
+$('#hudVol').addEventListener('input', () => {
+  $('#vol').value = $('#hudVol').value;
+  $('#volVal').textContent = $('#vol').value + '%';
+  if(G) G.cfg.vol = +$('#vol').value;
+  saveCfg();
+});
 
 document.addEventListener('keydown', e => {
   if($('#game').classList.contains('hidden')) return;
   if(e.code === 'Escape'){ quitGame(); return; }
   if(e.code === 'Space'){
-    // se o foco está num botão, o próprio botão já cuida do clique
     if(e.target && e.target.closest && e.target.closest('button')) return;
     e.preventDefault();
     togglePause();
   }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if(!G || G.finished || G.paused) return;
+  if(document.hidden) togglePause();
+});
+
+window.addEventListener('pagehide', () => {
+  if(actx){ try{ actx.close(); }catch(e){} actx = null; }
 });
 
 document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
@@ -984,10 +1226,30 @@ document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => setM
 ['#words','#evDouble','#evHalf','#evStop','#evFrantic','#evVib'].forEach(s => $(s).addEventListener('change', () => { syncLabels(); saveCfg(); }));
 document.querySelectorAll('.chk').forEach(c => c.addEventListener('click', () => setTimeout(syncLabels, 0)));
 
-loadCfg();
-syncLabels();
-renderMedia();
-renderHist();
+/* ---------- boot ---------- */
+(async function boot(){
+  try{ await openDB(); }catch(e){ db = null; }
+  if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+  if(db){
+    try{
+      const recs = await dbAll();
+      recs.forEach(r => {
+        media.push({
+          id: r.id, hash: r.hash, name: r.name || '', type: r.type,
+          blob: r.blob || null,
+          url: r.blob ? URL.createObjectURL(r.blob) : r.url,
+          own: !!r.blob, fx: r.fx ?? 50, fy: r.fy ?? 50, dur: r.dur || 0
+        });
+      });
+    }catch(e){}
+  }
+
+  loadCfg();
+  syncLabels();
+  renderMedia();
+  renderHist();
+})();
 })();
 </script>
 
